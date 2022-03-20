@@ -7,6 +7,7 @@ import com.osiris.messaging.events.EventModel;
 import com.osiris.messaging.exceptions.AggregateNotFoundException;
 import com.osiris.messaging.exceptions.ConcurrencyException;
 import com.osiris.messaging.infrastructure.EventStore;
+import com.osiris.messaging.producers.EventProducer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -16,10 +17,12 @@ import java.util.List;
 @Service
 public class AccountEventStore implements EventStore {
     private final EventStoreRepository eventStoreRepository;
+    private final EventProducer eventProducer;
 
     @Autowired
-    public AccountEventStore(EventStoreRepository eventStoreRepository) {
+    public AccountEventStore(EventStoreRepository eventStoreRepository, EventProducer eventProducer) {
         this.eventStoreRepository = eventStoreRepository;
+        this.eventProducer = eventProducer;
     }
 
     @Override
@@ -41,8 +44,8 @@ public class AccountEventStore implements EventStore {
                     .eventData(event)
                     .build();
             var persistedEvent = eventStoreRepository.save(eventModel);
-            if(persistedEvent != null){
-                //TODO: produce event to Kafka
+            if(!persistedEvent.getId().isEmpty()){
+                this.eventProducer.produce(event.getClass().getSimpleName(), event);
             }
         }
     }
