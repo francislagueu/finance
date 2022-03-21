@@ -29,6 +29,10 @@ public class AccountAggregate extends AggregateRoot {
         return this.balance;
     }
 
+    public boolean getActive(){
+        return this.active;
+    }
+
     public void apply(AccountOpenedEvent event){
         this.id = event.getId();
         this.active = true;
